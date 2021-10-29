@@ -7,13 +7,25 @@ import threading
 
 app = Flask(__name__)
 
+logs = []
 
-@app.route('/', methods=['POST'])
+@app.route('/', methods=['GET'])
 def receive_data():
     print(request.get_json())
-    return json.dumps({'success' : True}), 200, {'ContentType' : 'application/json'}
+    return json.dumps({'success' : True}), 200
 
 
+@app.route('/ping', methods=['GET'])
+def receive_data():
+    print(request.get_json())
+    return json.dumps({'ping' : 'pong}), 200
+
+@app.route('/status', methods=['GET'])
+def receive_data():
+    print(request.get_json())
+    return json.dumps({'ping' : 'pong}), 200
+                       
+                       
 def setup_mongo():
     # establing connection
     try:
