@@ -1,61 +1,23 @@
-import datetime
-import os
-import shutil
-import sqlite3
-import time
+from db.sqllite_dbdriver import SQLLiteDBDriver
 
 
 class Logger:
-    def __init__(self, queue_length=500, path_to_logs="./logs"):
-        self.__clear_logs("./logs")
-        os.mkdir(path_to_logs)
-        self.path_to_logs = path_to_logs + '/main.db'
-        self.__setup_db()
-        self.queue_length = queue_length
-
-    def __setup_db(self):
-        time.sleep(2)
-        db_connection = sqlite3.connect(self.path_to_logs)
-        cur = db_connection.cursor()
-        cur.execute('''CREATE TABLE logs
-                       (date text, data text, caller text, log_level text)''')
-
-        db_connection.commit()
-        db_connection.close()
-
-    def __clear_logs(self, path):
-        if os.path.isdir(path):
-            shutil.rmtree(path)
-
-    def __add_to_log(self, data, caller, Log_level):
-        db_connection = sqlite3.connect(self.path_to_logs)
-        cur = db_connection.cursor()
-        db_string = "INSERT INTO logs(date, data, caller, log_level) VALUES (?,?,?,?)"
-        vals = [str(datetime.datetime.now()), str(data), str(caller), str(Log_level)]
-        cur.execute(db_string, vals)
-        db_connection.commit()
-        db_connection.close()
+    def __init__(self, db_driver, queue_length=500):
+        self.table_name = "logs"
+        self.sqllite_driver = db_driver
+        self.sqllite_driver.setup_table(self.table_name, "data text, caller text, log_level text")
 
     def print_logs(self, log_level=1):
-        ret = []
-        db_connection = sqlite3.connect(self.path_to_logs)
-        cur = db_connection.cursor()
-        for itm in cur.execute('SELECT * FROM logs'):
-            ret.append(itm)
-        db_connection.commit()
-        db_connection.close()
-        return ret
+        return self.sqllite_driver.get_records(self.table_name, log_level=1)
 
     def debug(self, data, caller):
-        self.__add_to_log(data, caller, "DEBUG")
+        self.sqllite_driver.add_record(self.table_name, data, caller, "DEBUG")
 
     def info(self, data, caller):
-        self.__add_to_log(data, caller, "INFO")
+        self.sqllite_driver.add_record(self.table_name, data, caller, "INFO")
 
     def warn(self, data, caller):
-        self.__add_to_log(data, caller, "WARN")
+        self.sqllite_driver.add_record(self.table_name, data, caller, "WARN")
 
     def error(self, data, caller):
-        self.__add_to_log(data, caller, "ERROR")
-
-
+        self.sqllite_driver.add_record(self.table_name, data, caller, "ERROR")
